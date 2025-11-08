@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: laravel-inventory-system
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: LOG_CHANNEL
+        value: stack
+      - key: APP_URL
+        sync: false
+    healthCheckPath: /
+
+databases:
+  - name: laravel-inventory-db
+    databaseName: laravel_inventory
+    user: laravel_user
+    plan: free
+    region: singapore
+
