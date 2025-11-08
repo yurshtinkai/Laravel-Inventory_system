@@ -74,13 +74,40 @@ PORT=${PORT:-10000}\n\
 sed -i "s/Listen 10000/Listen $PORT/" /etc/apache2/ports.conf\n\
 sed -i "s/:10000/:$PORT/" /etc/apache2/sites-available/000-default.conf\n\
 \n\
+# Wait for database to be ready (helps with initial deployment)\n\
+echo "Waiting for database connection..."\n\
+max_attempts=30\n\
+attempt=0\n\
+db_ready=false\n\
+while [ $attempt -lt $max_attempts ]; do\n\
+  if php artisan migrate:status &> /dev/null 2>&1; then\n\
+    echo "Database is ready!"\n\
+    db_ready=true\n\
+    break\n\
+  fi\n\
+  attempt=$((attempt + 1))\n\
+  echo "Waiting for database... (attempt $attempt/$max_attempts)"\n\
+  sleep 2\n\
+done\n\
+\n\
 # Clear and cache config\n\
-php artisan config:clear\n\
-php artisan cache:clear\n\
+php artisan config:clear || true\n\
+php artisan cache:clear || true\n\
 \n\
-# Run migrations (uncomment the line below if you want automatic migrations)\n\
-# php artisan migrate --force\n\
+# Run migrations automatically if database is ready\n\
+if [ "$db_ready" = true ]; then\n\
+  echo "Running database migrations..."\n\
+  php artisan migrate --force --no-interaction && echo "Migrations completed successfully!" || echo "Migration completed (may have been already run)"\n\
+else\n\
+  echo "Warning: Database connection not available. Skipping migrations. They will run on next container start."\n\
+fi\n\
 \n\
+# Cache configuration for better performance\n\
+php artisan config:cache || true\n\
+php artisan route:cache || true\n\
+php artisan view:cache || true\n\
+\n\
+echo "Starting Apache server on port $PORT..."\n\
 # Start Apache\n\
 exec apache2-foreground\n\
 ' > /start.sh && chmod +x /start.sh

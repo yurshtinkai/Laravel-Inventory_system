@@ -73,25 +73,34 @@ Since Render doesn't show PHP directly in the language dropdown, we're using Doc
 
 ## Post-Deployment Steps
 
-1. **Run Migrations**
-   - Go to your service in Render dashboard
-   - Open the "Shell" tab
-   - Run: `php artisan migrate --force`
+### Automatic Migrations ✅
+**Good news!** Migrations now run automatically when your container starts. The startup script will:
+- Wait for the database to be ready
+- Automatically run `php artisan migrate --force`
+- Create all database tables
+- Cache configuration for better performance
 
-2. **Seed Database (Optional)**
-   - In the shell: `php artisan db:seed`
+You can verify migrations ran successfully by checking the logs in Render dashboard.
 
-3. **Clear Cache**
-   - In the shell: `php artisan config:clear`
-   - In the shell: `php artisan cache:clear`
-   - In the shell: `php artisan view:clear`
+### Optional: Seed Database
+If you want to seed your database with initial data:
+- Go to your service in Render dashboard
+- Open the "Shell" tab
+- Run: `php artisan db:seed`
+
+### Manual Migration (if needed)
+If you need to run migrations manually for any reason:
+- Go to your service in Render dashboard
+- Open the "Shell" tab
+- Run: `php artisan migrate --force`
 
 ## Important Notes
 
 - **Storage**: Render's file system is ephemeral. For file uploads, use S3 or similar cloud storage.
 - **Queue Workers**: If you use queues, create a separate Background Worker service.
 - **Scheduled Tasks**: Use Render's Cron Jobs feature for Laravel's task scheduler.
-- **Database Migrations**: You can enable automatic migrations by uncommenting the line in the Dockerfile's startup script.
+- **Database Migrations**: Migrations run automatically on every container start. The script waits for the database to be ready before running migrations.
+- **Migration Safety**: Migrations are run with `--force` flag in production mode. Make sure your migrations are safe to run multiple times (idempotent).
 
 ## Troubleshooting
 
