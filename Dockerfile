@@ -4,8 +4,8 @@ FROM php:8.2-apache
 # Set working directory
 WORKDIR /var/www/html
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies and clean up in one layer to reduce image size
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     libpng-dev \
@@ -18,7 +18,9 @@ RUN apt-get update && apt-get install -y \
     npm \
     libpq-dev \
     && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip \
-    && docker-php-ext-enable pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-enable pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -36,37 +38,47 @@ RUN echo '<VirtualHost *:10000>\n\
     </Directory>\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Copy all application files first
-COPY . /var/www/html
+# Copy dependency files first for better Docker layer caching
+# This allows Docker to cache these layers and only rebuild when dependencies change
+COPY composer.json composer.lock* /var/www/html/
+COPY package.json package-lock.json* /var/www/html/
 
-# Install PHP dependencies
+# Install PHP dependencies (this layer will be cached unless composer files change)
 RUN if [ ! -f composer.json ]; then \
         echo "ERROR: composer.json not found! Make sure it exists in your repository."; \
         exit 1; \
     fi && \
     composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-# Install Node dependencies (if package.json exists)
+# Install Node dependencies (this layer will be cached unless package files change)
 RUN if [ -f package.json ]; then \
-        npm ci --legacy-peer-deps || npm install --legacy-peer-deps; \
+        npm ci --legacy-peer-deps --prefer-offline --no-audit || npm install --legacy-peer-deps --prefer-offline --no-audit; \
     else \
         echo "WARNING: package.json not found, skipping npm install"; \
     fi
 
-# Set permissions
+# Copy the rest of the application files
+COPY . /var/www/html
+
+# Set permissions and build assets in optimized order
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Run composer scripts and build assets
-RUN composer dump-autoload --optimize --classmap-authoritative
+# Run composer scripts
+RUN composer dump-autoload --optimize --classmap-authoritative --no-interaction
 
-# Build frontend assets if package.json exists
+# Build frontend assets (Vite automatically uses production mode in Docker)
 RUN if [ -f package.json ]; then \
         npm run build; \
     else \
         echo "WARNING: package.json not found, skipping npm build"; \
+    fi
+
+# Clean up npm cache to reduce image size
+RUN if [ -f package.json ]; then \
+        npm cache clean --force; \
     fi
 
 # Expose port (Render will set PORT env var)

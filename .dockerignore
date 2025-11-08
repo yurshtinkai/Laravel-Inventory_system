@@ -1,17 +1,23 @@
 .git
 .gitignore
+.gitattributes
 .env
 .env.backup
 .env.production
 node_modules
 npm-debug.log
-README.md
 .phpunit.result.cache
 storage/*.key
+storage/logs/*
 vendor
 tests
 .editorconfig
 .idea
 .vscode
 *.md
+DEPLOYMENT.md
+DEPLOYMENT_FIX.md
+HOW_TO_FIND_APP_URL.md
+.DS_Store
+Thumbs.db
 
