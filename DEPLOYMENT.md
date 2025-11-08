@@ -35,6 +35,8 @@ Since Render doesn't show PHP directly in the language dropdown, we're using Doc
    In your web service settings, add these environment variables:
    
    **Before First Deployment (you can add APP_URL later):**
+   
+   **For MySQL Database:**
    ```
    APP_ENV=production
    APP_DEBUG=false
@@ -50,6 +52,39 @@ Since Render doesn't show PHP directly in the language dropdown, we're using Doc
    
    LOG_CHANNEL=stack
    ```
+   
+   **For PostgreSQL Database (Render's default free tier):**
+   ```
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_KEY=base64:YOUR_APP_KEY_HERE
+   (APP_URL - add this after deployment, see step 7)
+   
+   DB_CONNECTION=pgsql
+   DB_HOST=your-db-host
+   DB_PORT=5432
+   DB_DATABASE=your-db-name
+   DB_USERNAME=your-db-username
+   DB_PASSWORD=your-db-password
+   
+   LOG_CHANNEL=stack
+   ```
+   
+   **📍 Where to Find Database Connection Details:**
+   - Go to your database service in Render dashboard
+   - Click on your database (e.g., "laravel-inventory-db")
+   - Look for "Connection Information" or "Internal Database URL" section
+   - You'll find: Host, Port, Database Name, Username, Password
+   - **Important:** Use the **Internal Database URL** or connection details shown in Render
+   - **Note:** Render provides the port in the connection details - use that port number
+   
+   **💡 About DB_PORT:**
+   - **Yes, DB_PORT should be included** in your environment variables
+   - **MySQL default port:** `3306`
+   - **PostgreSQL default port:** `5432`
+   - Render will show you the exact port in the database connection details
+   - While Laravel has defaults, it's **recommended to include DB_PORT explicitly** for clarity
+   - If you omit DB_PORT, Laravel will use defaults (3306 for MySQL, 5432 for PostgreSQL)
    
    **Note:** You'll add `APP_URL` after the first deployment once you know your app's URL.
 
@@ -145,15 +180,27 @@ If you need to run migrations manually for any reason:
 
 ## Environment Variables Reference
 
-Required:
-- `APP_KEY`: Application encryption key
-- `APP_URL`: Your application URL
-- `DB_*`: Database connection details
+### Required Variables:
+- `APP_KEY`: Application encryption key (generate with `php artisan key:generate`)
+- `APP_URL`: Your application URL (found after deployment in Render dashboard)
+- `DB_CONNECTION`: Database type (`mysql` or `pgsql`)
+- `DB_HOST`: Database host (from Render database connection details)
+- `DB_PORT`: Database port (`3306` for MySQL, `5432` for PostgreSQL)
+- `DB_DATABASE`: Database name (from Render database connection details)
+- `DB_USERNAME`: Database username (from Render database connection details)
+- `DB_PASSWORD`: Database password (from Render database connection details)
 
-Optional but Recommended:
+### Optional but Recommended:
 - `APP_ENV`: Set to `production`
 - `APP_DEBUG`: Set to `false` in production
 - `LOG_CHANNEL`: Set to `stack` or `stderr`
+
+### Database Port Details:
+- **DB_PORT is included and recommended** for explicit configuration
+- **MySQL:** Default port is `3306`
+- **PostgreSQL:** Default port is `5432`
+- **Render:** Check your database connection details for the exact port
+- **Note:** If DB_PORT is omitted, Laravel will use default ports, but it's better to specify it explicitly
 
 ## Support
 

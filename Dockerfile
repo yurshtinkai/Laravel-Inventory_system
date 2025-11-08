@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     nodejs \
     npm \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && docker-php-ext-enable pdo_mysql mbstring exif pcntl bcmath gd zip
+    libpq-dev \
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip \
+    && docker-php-ext-enable pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -35,20 +36,22 @@ RUN echo '<VirtualHost *:10000>\n\
     </Directory>\n\
 </VirtualHost>' > /etc/apache2/sites-available/000-default.conf
 
-# Copy composer files first for better layer caching
-COPY composer.json composer.lock* /var/www/html/
+# Copy all application files first
+COPY . /var/www/html
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
+RUN if [ ! -f composer.json ]; then \
+        echo "ERROR: composer.json not found! Make sure it exists in your repository."; \
+        exit 1; \
+    fi && \
+    composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-# Copy package files for Node dependencies
-COPY package.json package-lock.json* /var/www/html/
-
-# Install Node dependencies
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-
-# Copy application files
-COPY . /var/www/html
+# Install Node dependencies (if package.json exists)
+RUN if [ -f package.json ]; then \
+        npm ci --legacy-peer-deps || npm install --legacy-peer-deps; \
+    else \
+        echo "WARNING: package.json not found, skipping npm install"; \
+    fi
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
@@ -58,7 +61,13 @@ RUN chown -R www-data:www-data /var/www/html \
 
 # Run composer scripts and build assets
 RUN composer dump-autoload --optimize --classmap-authoritative
-RUN npm run build
+
+# Build frontend assets if package.json exists
+RUN if [ -f package.json ]; then \
+        npm run build; \
+    else \
+        echo "WARNING: package.json not found, skipping npm build"; \
+    fi
 
 # Expose port (Render will set PORT env var)
 EXPOSE 10000
