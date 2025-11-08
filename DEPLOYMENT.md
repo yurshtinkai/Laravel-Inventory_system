@@ -34,11 +34,12 @@ Since Render doesn't show PHP directly in the language dropdown, we're using Doc
 4. **Configure Environment Variables**
    In your web service settings, add these environment variables:
    
+   **Before First Deployment (you can add APP_URL later):**
    ```
    APP_ENV=production
    APP_DEBUG=false
    APP_KEY=base64:YOUR_APP_KEY_HERE
-   APP_URL=https://your-service-name.onrender.com
+   (APP_URL - add this after deployment, see step 7)
    
    DB_CONNECTION=mysql
    DB_HOST=your-db-host
@@ -49,6 +50,8 @@ Since Render doesn't show PHP directly in the language dropdown, we're using Doc
    
    LOG_CHANNEL=stack
    ```
+   
+   **Note:** You'll add `APP_URL` after the first deployment once you know your app's URL.
 
 5. **Generate APP_KEY**
    - Run this locally: `php artisan key:generate --show`
@@ -59,6 +62,27 @@ Since Render doesn't show PHP directly in the language dropdown, we're using Doc
    - Click "Create Web Service"
    - Render will build and deploy your application
    - This may take 5-10 minutes on first deployment
+
+7. **Find Your App URL and Set APP_URL**
+   
+   **📍 Where to Find Your URL:**
+   - After deployment completes, go to your service page in Render dashboard
+   - The URL is displayed at the **top of the page** in a banner/header
+   - It looks like: `https://laravel-inventory-system-xxxx.onrender.com`
+   - **📖 Detailed guide:** See `HOW_TO_FIND_APP_URL.md` for step-by-step instructions with screenshots locations
+   
+   **🔧 How to Set APP_URL:**
+   - Copy the URL from the top of your service page
+   - Go to your service → **Environment** tab (left sidebar)
+   - Click **"Add Environment Variable"**
+   - **Key**: `APP_URL`
+   - **Value**: Paste your URL (e.g., `https://laravel-inventory-system-xxxx.onrender.com`)
+   - Click **"Save Changes"**
+   - Render will automatically redeploy (this is normal and takes a few minutes)
+   
+   **💡 Tip:** You can deploy without APP_URL first, then add it after you see your URL. Your app will work, but some Laravel features (like URL generation) work better with APP_URL set.
+   
+   **Alternative:** If using `render.yaml`, `APP_URL` has `sync: true` which may auto-set it, but you should still verify it's correct in the Environment tab.
 
 ### Option 2: Using render.yaml (Infrastructure as Code)
 

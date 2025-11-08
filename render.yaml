@@ -14,7 +14,7 @@ services:
       - key: LOG_CHANNEL
         value: stack
       - key: APP_URL
-        sync: false
+        sync: true
     healthCheckPath: /
 
 databases:
