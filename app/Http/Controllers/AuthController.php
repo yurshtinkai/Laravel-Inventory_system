@@ -20,8 +20,7 @@ class AuthController extends Controller
     ]);
 
     $user = User::where('username', $request->username)->first();
-    $user->last_login = now();
-    $user->save();
+    
     if (!$user) {
         return response()->json([
             'success' => false,
@@ -40,6 +39,8 @@ class AuthController extends Controller
         ], 422);
     }
 	
+    $user->last_login = now();
+    $user->save();
 
     session(['username' => $user->username]);
 
