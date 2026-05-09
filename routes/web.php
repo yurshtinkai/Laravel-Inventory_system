@@ -20,6 +20,30 @@ use App\Http\Controllers\LostItemController;
 
 Route::get('/', [AuthController::class, 'index'])->name('index');
 
+// Test route to check database and users
+Route::get('/test-db', function() {
+    try {
+        $userCount = \App\Models\User::count();
+        $users = \App\Models\User::all();
+        return response()->json([
+            'database' => 'connected',
+            'user_count' => $userCount,
+            'users' => $users->map(function($user) {
+                return [
+                    'id' => $user->userID,
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'role' => $user->user_Role
+                ];
+            })
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
 
