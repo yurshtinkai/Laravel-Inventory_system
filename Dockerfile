@@ -119,6 +119,15 @@ php artisan cache:clear || true\n\
 if [ "$db_ready" = true ]; then\n\
   echo "Running database migrations..."\n\
   php artisan migrate --force --no-interaction && echo "Migrations completed successfully!" || echo "Migration completed (may have been already run)"\n\
+  \n\
+  # Check if database is empty and seed if needed\n\
+  user_count=$(php artisan tinker --execute="echo App\\\\Models\\\\User::count();" 2>/dev/null || echo "0")\n\
+  if [ "$user_count" = "0" ] || [ -z "$user_count" ]; then\n\
+    echo "Database is empty. Running seeders..."\n\
+    php artisan db:seed --force --no-interaction && echo "Database seeded successfully!" || echo "Seeding skipped or already completed"\n\
+  else\n\
+    echo "Database already has data. Skipping seeding."\n\
+  fi\n\
 else\n\
   echo "Warning: Database connection not available. Skipping migrations. They will run on next container start."\n\
 fi\n\
