@@ -31,13 +31,28 @@
 
         .navbar-brand {
             font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .navbar img {
             height: 40px;
             width: 40px;
             border-radius: 50%;
+        }
+
+        .navbar .logo-inventory {
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
             margin-right: 10px;
+        }
+
+        .navbar .logo-bc {
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
         }
 
         .navbar-toggler {
@@ -205,6 +220,16 @@
                 width: 35px;
             }
 
+            .navbar .logo-inventory {
+                height: 35px;
+                width: 35px;
+            }
+
+            .navbar .logo-bc {
+                height: 35px;
+                width: 35px;
+            }
+
             .navbar-brand {
                 font-size: 1rem;
             }
@@ -214,8 +239,11 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-            <img src="bc.png" alt="Logo"/>
-            <a class="navbar-brand" href="#">Inventory System</a>
+            <img src="logo_inven.jpg" alt="Inventory Logo" class="logo-inventory"/>
+            <a class="navbar-brand" href="#">
+                <img src="bc.png" alt="BC Logo" class="logo-bc"/>
+                Inventory System
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
